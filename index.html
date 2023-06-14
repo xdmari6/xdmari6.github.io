@@ -1,7 +1,122 @@
 <!DOCTYPE html>
 <html>
+<head>
+  <title>Hypixel API Test</title>
+  <link rel="stylesheet" type="text/css" href="styles.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
 <body>
-<h1>Hello World</h1>
-<p>I'm hosted with GitHub Pages.</p>
+  <h1>Hypixel API Test</h1>
+  <form id="statsForm">
+    <label for="api">API Key:</label>
+    <input type="text" id="api" name="api" required><br>
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required><br>
+    <button type="submit" class="btn">Get Stats</button>
+  </form>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <div id="statsContainer" style="display: none;">
+    <h2>Bedwars</h2>
+    <p>WLR: <span id="bedwarsWLR"></span></p>
+    <p>FKDR: <span id="bedwarsFKDR"></span></p>
+    <p>Stars: <span id="bedwarsStars"></span></p>
+    
+    <h2>Skywars</h2>
+    <p>WLR: <span id="skywarsWLR"></span></p>
+    <p>Kills: <span id="skywarsKills"></span></p>
+    <p>Stars: <span id="skywarsStars"></span></p>
+
+    <h2>Duels</h2>
+    <p>WLR: <span id="duelsWLR"></span></p>
+    <p>Kills: <span id="duelsKills"></span></p>
+    <p>Title: <span id="duelsTitle"></span></p>
+  </div>
+  
+  <script>
+    function colorize(colorCode) {
+      var color = colorCode.replace(/§./g, function(match) {
+        var code = match.charAt(1);
+        var colorMap = {
+          '0': 'color-black',
+          '1': 'color-dark-blue',
+          '2': 'color-dark-green',
+          '3': 'color-dark-aqua',
+          '4': 'color-dark-red',
+          '5': 'color-dark-purple',
+          '6': 'color-gold',
+          '7': 'color-gray',
+          '8': 'color-dark-gray',
+          '9': 'color-blue',
+          'a': 'color-green',
+          'b': 'color-aqua',
+          'c': 'color-red',
+          'd': 'color-light-purple',
+          'e': 'color-yellow',
+          'f': 'color-white'
+        };
+        return '<span class="' + colorMap[code] + '">';
+      });
+      return color.replace(/§r/g, '</span>');
+    }
+
+    $(document).ready(function() {
+      $('#statsForm').on('submit', function(event) {
+        event.preventDefault();
+        
+        var apiKey = $('#api').val();
+        var username = $('#username').val();
+        
+        $.ajax({
+          url: 'https://api.hypixel.net/player',
+          type: 'GET',
+          dataType: 'json',
+          data: {
+            key: apiKey,
+            name: username
+          },
+          success: function(data) {
+            if (data.success) {
+              var player = data.player;
+              
+              var bedwarsStats = player.stats.Bedwars;
+              var bedwarsWLR = bedwarsStats.wins_bedwars / bedwarsStats.losses_bedwars;
+              var bedwarsFKDR = bedwarsStats.final_kills_bedwars / bedwarsStats.final_deaths_bedwars;
+              var bedwarsStars = bedwarsStats.level;
+              
+              var duelsStats = player.stats.Duels;
+              var duelsWLR = duelsStats.wins / duelsStats.losses;
+              var duelsKills = duelsStats.kills;
+              var duelsTitle = duelsStats.selected_duel_mode;
+              
+              var skywarsStats = player.stats.SkyWars;
+              var skywarsWLR = skywarsStats.wins / skywarsStats.losses;
+              var skywarsKills = skywarsStats.kills;
+              var skywarsStars = colorize(skywarsStats.levelFormatted);
+
+              $('#bedwarsWLR').text(bedwarsWLR.toFixed(2));
+              $('#bedwarsFKDR').text(bedwarsFKDR.toFixed(2));
+              $('#bedwarsStars').text(bedwarsStars || 'N/A');
+              
+              $('#skywarsWLR').text(skywarsWLR.toFixed(2));
+              $('#skywarsKills').text(skywarsKills);
+              $('#skywarsStars').html(skywarsStars);
+
+              $('#duelsWLR').text(duelsWLR.toFixed(2));
+              $('#duelsKills').text(duelsKills);
+              $('#duelsTitle').text(duelsTitle || 'N/A');
+
+              $('#statsContainer').show();
+            } else {
+              alert('Failed to retrieve player stats. Please check your API key and username.');
+            }
+          },
+          error: function() {
+            alert('Failed to retrieve player stats. Please check your API key and username.');
+          }
+        });
+      });
+    });
+  </script>
 </body>
 </html>
